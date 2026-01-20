@@ -99,8 +99,8 @@ struct SignatureView: View {
     private func renderSignatureImage() -> UIImage {
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: 600, height: 300))
         return renderer.image { context in
-            // Transparent background
-            UIColor.clear.setFill()
+            // White background for better visibility
+            UIColor.white.setFill()
             context.fill(CGRect(origin: .zero, size: CGSize(width: 600, height: 300)))
 
             // Draw signature with smooth, elegant style

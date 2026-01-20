@@ -70,6 +70,11 @@ struct PDFEditorView: View {
     private func handleTap(at point: CGPoint, on page: PDFPage, in geometry: GeometryProxy) {
         currentPage = page
 
+        // Deselect all annotations when tapping on PDF
+        for annotation in editableAnnotations {
+            annotation.isEditing = false
+        }
+
         switch annotationModel.currentTool {
         case .text:
             // Create editable text annotation at tap location
@@ -124,14 +129,18 @@ struct PDFEditorView: View {
             y: geometry.size.height / 2
         )
 
+        print("🔵 Creating signature annotation with image size: \(signature.size)")
+
         let signatureAnnotation = EditableAnnotation(
             position: centerPoint,
             size: CGSize(width: 200, height: 100),
             type: .signature,
             signature: signature
         )
-        signatureAnnotation.isEditing = true
+        signatureAnnotation.isEditing = false  // Start deselected to show clean signature
         editableAnnotations.append(signatureAnnotation)
+
+        print("✅ Signature annotation added to overlays")
     }
 
     private func deleteAnnotation(_ annotation: EditableAnnotation) {
