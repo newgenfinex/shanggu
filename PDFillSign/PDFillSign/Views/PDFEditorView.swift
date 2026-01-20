@@ -7,62 +7,106 @@ struct PDFEditorView: View {
     @StateObject private var annotationModel = AnnotationModel()
     @State private var showingToolbar = true
     @State private var showingSignatureView = false
-    @State private var showingTextInput = false
-    @State private var textToAdd = ""
-    @State private var selectedPoint: CGPoint?
-    @State private var selectedPage: PDFPage?
     @State private var showingSaveDialog = false
+    @State private var editableAnnotations: [EditableAnnotation] = []
+    @State private var pdfViewGeometry: GeometryProxy?
+    @State private var currentPage: PDFPage?
 
     var body: some View {
-        VStack(spacing: 0) {
-            if showingToolbar {
-                ToolbarView(
-                    annotationModel: annotationModel,
-                    onSignatureTapped: { showingSignatureView = true },
-                    onSaveTapped: { showingSaveDialog = true },
-                    onCloseTapped: { documentManager.closeDocument() }
-                )
-            }
+        ZStack {
+            VStack(spacing: 0) {
+                if showingToolbar {
+                    ToolbarView(
+                        annotationModel: annotationModel,
+                        onSignatureTapped: { showingSignatureView = true },
+                        onSaveTapped: { showingSaveDialog = true },
+                        onCloseTapped: { documentManager.closeDocument() },
+                        onFinalizeTapped: finalizeAllAnnotations
+                    )
+                }
 
-            PDFViewWrapper(
-                document: document,
-                annotationModel: annotationModel,
-                onTap: handleTap
-            )
+                GeometryReader { geometry in
+                    ZStack {
+                        PDFViewWrapper(
+                            document: document,
+                            annotationModel: annotationModel,
+                            onTap: { point, page in
+                                handleTap(at: point, on: page, in: geometry)
+                            },
+                            geometry: geometry
+                        )
+
+                        // Overlay editable annotations
+                        ForEach(editableAnnotations) { annotation in
+                            AnnotationOverlayView(
+                                annotation: annotation,
+                                onDelete: {
+                                    deleteAnnotation(annotation)
+                                }
+                            )
+                        }
+                    }
+                    .onAppear {
+                        pdfViewGeometry = geometry
+                    }
+                }
+            }
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(true)
         .sheet(isPresented: $showingSignatureView) {
-            SignatureView(annotationModel: annotationModel)
-        }
-        .sheet(isPresented: $showingTextInput) {
-            TextInputView(text: $textToAdd, onAdd: addTextAnnotation)
+            SignatureView(
+                annotationModel: annotationModel,
+                onSignatureCreated: { signature in
+                    placeSignatureOnPDF(signature)
+                }
+            )
         }
         .sheet(isPresented: $showingSaveDialog) {
             SaveDocumentView(documentManager: documentManager)
         }
     }
 
-    private func handleTap(at point: CGPoint, on page: PDFPage) {
+    private func handleTap(at point: CGPoint, on page: PDFPage, in geometry: GeometryProxy) {
+        currentPage = page
+
         switch annotationModel.currentTool {
         case .text:
-            selectedPoint = point
-            selectedPage = page
-            showingTextInput = true
+            // Create editable text annotation at tap location
+            let textAnnotation = EditableAnnotation(
+                position: point,
+                size: CGSize(width: 200, height: 60),
+                text: "",
+                type: .text
+            )
+            textAnnotation.isEditing = true
+            editableAnnotations.append(textAnnotation)
 
         case .checkmark:
-            let annotation = annotationModel.createCheckmarkAnnotation(at: point, in: page)
-            page.addAnnotation(annotation)
+            // Create checkmark annotation
+            let checkmarkAnnotation = EditableAnnotation(
+                position: point,
+                size: CGSize(width: 40, height: 40),
+                text: "✓",
+                type: .checkmark
+            )
+            editableAnnotations.append(checkmarkAnnotation)
 
         case .circle:
-            let annotation = annotationModel.createCircleAnnotation(at: point, in: page)
-            page.addAnnotation(annotation)
+            // Create circle annotation
+            let circleAnnotation = EditableAnnotation(
+                position: point,
+                size: CGSize(width: 60, height: 60),
+                type: .circle
+            )
+            editableAnnotations.append(circleAnnotation)
 
         case .signature:
-            if let signature = annotationModel.savedSignature,
-               let annotation = annotationModel.createSignatureAnnotation(at: point, in: page, signature: signature) {
-                page.addAnnotation(annotation)
+            if annotationModel.savedSignature != nil {
+                // Signature already exists, user needs to tap where to place it
+                showingSignatureView = true
             } else {
+                // No signature yet, show signature creation
                 showingSignatureView = true
             }
 
@@ -71,17 +115,72 @@ struct PDFEditorView: View {
         }
     }
 
-    private func addTextAnnotation() {
-        guard let point = selectedPoint,
-              let page = selectedPage,
-              !textToAdd.isEmpty else { return }
+    private func placeSignatureOnPDF(_ signature: UIImage) {
+        // Place signature in center of visible area
+        guard let geometry = pdfViewGeometry else { return }
 
-        let annotation = annotationModel.createTextAnnotation(at: point, in: page, text: textToAdd)
-        page.addAnnotation(annotation)
+        let centerPoint = CGPoint(
+            x: geometry.size.width / 2,
+            y: geometry.size.height / 2
+        )
 
-        textToAdd = ""
-        selectedPoint = nil
-        selectedPage = nil
+        let signatureAnnotation = EditableAnnotation(
+            position: centerPoint,
+            size: CGSize(width: 200, height: 100),
+            type: .signature,
+            signature: signature
+        )
+        signatureAnnotation.isEditing = true
+        editableAnnotations.append(signatureAnnotation)
+    }
+
+    private func deleteAnnotation(_ annotation: EditableAnnotation) {
+        editableAnnotations.removeAll { $0.id == annotation.id }
+    }
+
+    private func finalizeAllAnnotations() {
+        guard let page = currentPage ?? document.page(at: 0) else { return }
+
+        for annotation in editableAnnotations {
+            switch annotation.type {
+            case .text:
+                if !annotation.text.isEmpty {
+                    let pdfAnnotation = annotationModel.createTextAnnotation(
+                        at: annotation.position,
+                        in: page,
+                        text: annotation.text
+                    )
+                    page.addAnnotation(pdfAnnotation)
+                }
+
+            case .signature:
+                if let signature = annotation.signature,
+                   let pdfAnnotation = annotationModel.createSignatureAnnotation(
+                    at: annotation.position,
+                    in: page,
+                    signature: signature
+                   ) {
+                    page.addAnnotation(pdfAnnotation)
+                }
+
+            case .checkmark:
+                let pdfAnnotation = annotationModel.createCheckmarkAnnotation(
+                    at: annotation.position,
+                    in: page
+                )
+                page.addAnnotation(pdfAnnotation)
+
+            case .circle:
+                let pdfAnnotation = annotationModel.createCircleAnnotation(
+                    at: annotation.position,
+                    in: page
+                )
+                page.addAnnotation(pdfAnnotation)
+            }
+        }
+
+        // Clear all editable annotations after finalizing
+        editableAnnotations.removeAll()
     }
 }
 
@@ -89,6 +188,7 @@ struct PDFViewWrapper: UIViewRepresentable {
     let document: PDFDocument
     @ObservedObject var annotationModel: AnnotationModel
     let onTap: (CGPoint, PDFPage) -> Void
+    let geometry: GeometryProxy
 
     func makeUIView(context: Context) -> PDFView {
         let pdfView = PDFView()
@@ -96,9 +196,13 @@ struct PDFViewWrapper: UIViewRepresentable {
         pdfView.autoScales = true
         pdfView.displayMode = .singlePageContinuous
         pdfView.displayDirection = .vertical
+        pdfView.backgroundColor = UIColor.systemGray6
 
         let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
+        tapGesture.cancelsTouchesInView = false
         pdfView.addGestureRecognizer(tapGesture)
+
+        context.coordinator.pdfView = pdfView
 
         return pdfView
     }
@@ -113,6 +217,7 @@ struct PDFViewWrapper: UIViewRepresentable {
 
     class Coordinator: NSObject {
         let parent: PDFViewWrapper
+        weak var pdfView: PDFView?
 
         init(_ parent: PDFViewWrapper) {
             self.parent = parent

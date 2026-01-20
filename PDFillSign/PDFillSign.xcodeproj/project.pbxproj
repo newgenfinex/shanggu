@@ -18,6 +18,8 @@
 		1E2222222222222222222222 /* TextInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E3333333333333333333333 /* TextInputView.swift */; };
 		1E4444444444444444444444 /* DocumentPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E5555555555555555555555 /* DocumentPicker.swift */; };
 		1E6666666666666666666666 /* SaveDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E7777777777777777777777 /* SaveDocumentView.swift */; };
+		1E8888888888888888888888 /* AnnotationOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EAAAAAAAAAAAAAAAAAAAAAA /* AnnotationOverlayView.swift */; };
+		1E9999999999999999999998 /* EditableAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EBBBBBBBBBBBBBBBBBBBBBB /* EditableAnnotation.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +36,8 @@
 		1E5555555555555555555555 /* DocumentPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPicker.swift; sourceTree = "<group>"; };
 		1E7777777777777777777777 /* SaveDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveDocumentView.swift; sourceTree = "<group>"; };
 		1E9999999999999999999999 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1EAAAAAAAAAAAAAAAAAAAAAA /* AnnotationOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnnotationOverlayView.swift; sourceTree = "<group>"; };
+		1EBBBBBBBBBBBBBBBBBBBBBB /* EditableAnnotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditableAnnotation.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,6 +89,7 @@
 				1E3333333333333333333333 /* TextInputView.swift */,
 				1E5555555555555555555555 /* DocumentPicker.swift */,
 				1E7777777777777777777777 /* SaveDocumentView.swift */,
+				1EAAAAAAAAAAAAAAAAAAAAAA /* AnnotationOverlayView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -94,6 +99,7 @@
 			children = (
 				1D8888888888888888888888 /* DocumentManager.swift */,
 				1DAAAAAAAAAAAAAAAAAAAAAA /* AnnotationModel.swift */,
+				1EBBBBBBBBBBBBBBBBBBBBBB /* EditableAnnotation.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -177,6 +183,8 @@
 				1E2222222222222222222222 /* TextInputView.swift in Sources */,
 				1E4444444444444444444444 /* DocumentPicker.swift in Sources */,
 				1E6666666666666666666666 /* SaveDocumentView.swift in Sources */,
+				1E8888888888888888888888 /* AnnotationOverlayView.swift in Sources */,
+				1E9999999999999999999998 /* EditableAnnotation.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

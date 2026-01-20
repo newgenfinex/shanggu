@@ -5,6 +5,7 @@ struct ToolbarView: View {
     let onSignatureTapped: () -> Void
     let onSaveTapped: () -> Void
     let onCloseTapped: () -> Void
+    let onFinalizeTapped: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -20,6 +21,16 @@ struct ToolbarView: View {
 
                 Text("PDF Fill & Sign")
                     .font(.headline)
+
+                Button(action: onFinalizeTapped) {
+                    Text("Done")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.green)
+                        .cornerRadius(8)
+                }
 
                 Spacer()
 
