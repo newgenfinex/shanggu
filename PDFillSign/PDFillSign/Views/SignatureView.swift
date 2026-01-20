@@ -151,7 +151,7 @@ struct SignatureView: View {
             if i == 1 {
                 path.addLine(to: midPoint)
             } else {
-                path.addQuadCurve(to: midPoint, controlPoint: previousPoint)
+                path.addQuadCurve(to: midPoint, control: previousPoint)
             }
         }
 
@@ -216,7 +216,7 @@ struct DrawingCanvas: View {
                 if i == 1 {
                     path.addLine(to: midPoint)
                 } else {
-                    path.addQuadCurve(to: midPoint, controlPoint: previousPoint)
+                    path.addQuadCurve(to: midPoint, control: previousPoint)
                 }
             }
 
