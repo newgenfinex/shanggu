@@ -10,10 +10,12 @@ struct ContentView: View {
         NavigationView {
             if showingWelcome && documentManager.currentDocument == nil {
                 WelcomeView(onImportTapped: {
+                    print("🔵 Import button tapped")
                     showingDocumentPicker = true
                     showingWelcome = false
                 })
             } else if let document = documentManager.currentDocument {
+                let _ = print("✅ Showing PDF Editor with document (\(document.pageCount) pages)")
                 PDFEditorView(document: document, documentManager: documentManager)
             } else {
                 VStack(spacing: 20) {

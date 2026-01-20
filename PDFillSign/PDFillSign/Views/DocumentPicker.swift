@@ -27,12 +27,18 @@ struct DocumentPicker: UIViewControllerRepresentable {
         }
 
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-            guard let url = urls.first else { return }
+            print("🔵 Document picker selected \(urls.count) documents")
+            guard let url = urls.first else {
+                print("❌ No URL selected")
+                return
+            }
+            print("🔵 Selected file: \(url.lastPathComponent)")
             parent.documentManager.loadDocument(from: url)
             parent.presentationMode.wrappedValue.dismiss()
         }
 
         func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+            print("⚠️ Document picker was cancelled")
             parent.presentationMode.wrappedValue.dismiss()
         }
     }

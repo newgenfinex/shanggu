@@ -8,19 +8,29 @@ class DocumentManager: ObservableObject {
     @Published var recentDocuments: [URL] = []
 
     func loadDocument(from url: URL) {
+        print("🔵 Attempting to load document from: \(url.path)")
+
         guard url.startAccessingSecurityScopedResource() else {
-            print("Failed to access security scoped resource")
+            print("❌ Failed to access security scoped resource")
             return
         }
 
-        defer { url.stopAccessingSecurityScopedResource() }
+        defer {
+            print("🔵 Stopping access to security scoped resource")
+            url.stopAccessingSecurityScopedResource()
+        }
 
+        print("🔵 Creating PDFDocument from URL...")
         if let document = PDFDocument(url: url) {
+            print("✅ PDF Document loaded successfully! Pages: \(document.pageCount)")
             DispatchQueue.main.async {
                 self.currentDocument = document
                 self.documentURL = url
                 self.addToRecentDocuments(url)
+                print("✅ Document set in DocumentManager")
             }
+        } else {
+            print("❌ Failed to create PDFDocument from URL")
         }
     }
 
